@@ -67,6 +67,17 @@ class Papercliphp_Attachment {
 		return file_exists($this->path($stylename));
 	}
 	
+	public function existsAll() {
+		$styles = array_keys($this->papercliphp->styles(false));
+		$styles[] = "";
+		foreach ($styles as $stylename) {
+			if(!$this->exists($stylename)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	public function delete($stylename="") {
 		$this->unlink($stylename);
 	}

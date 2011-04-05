@@ -123,9 +123,12 @@ public function uploadFor($user) {
 	$user->getImage()->filenameWithoutExtension();	// => my_funny_cat
 	$user->getImage()->extension();					// => jpg
 	
+	$user->getImage()->exists();		// Проверяет существует ли файл PUBLIC_DIR/images/users/123/my_funny_cat/original.jpg
+	$user->getImage()->exists("small");	// Проверяет существует ли файл PUBLIC_DIR/images/users/123/my_funny_cat/small.jpg
+	$user->getImage()->existsAll();		// Проверяет существуют ли все файлы
 	
 	$user->getImage()->delete();		// Удалить файл original.jpg
-	$user->getImage()->delete("small");	// Удалить файл 
+	$user->getImage()->delete("small");	// Удалить файл small.jpg
 	$user->getImage()->unlink();		// синоним delete()
 	
 	$user->getImage()->deleteAll();		// Удалить все файлы (original.jpg, small.jpg и tiny.jpg)
