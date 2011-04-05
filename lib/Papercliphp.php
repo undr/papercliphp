@@ -2,10 +2,13 @@
 if(!defined('ROOT_PAPERCLIPHP')) {
 	define("ROOT_PAPERCLIPHP", dirname(dirname(__FILE__)));
 }
+if(!defined('LIB_PAPERCLIPHP')) {
+	define("LIB_PAPERCLIPHP", dirname(__FILE__));
+}
 
-require_once(ROOT_PAPERCLIPHP . "/lib/Paperclip/Attachment.php");
-require_once(ROOT_PAPERCLIPHP . "/lib/Paperclip/Processor.php");
-require_once(ROOT_PAPERCLIPHP . "/lib/Paperclip/Processor/Default.php");
+require_once(LIB_PAPERCLIPHP . "/Papercliphp/Attachment.php");
+require_once(LIB_PAPERCLIPHP . "/Papercliphp/Processor.php");
+require_once(LIB_PAPERCLIPHP . "/Papercliphp/Processor/Default.php");
 
 class Papercliphp {
 	
@@ -16,7 +19,7 @@ class Papercliphp {
 	
 	public function __construct($config=array()) {
 		if(!isset($config['processors'])) {
-			$this->processors = array("Thumbnail" => ROOT_PAPERCLIPHP . "/lib/processors/");
+			$this->processors = array("Thumbnail" => LIB_PAPERCLIPHP . "/processors/");
 		} else {
 			$this->processors = $config['processors'];
 			unset($config['processors']);
