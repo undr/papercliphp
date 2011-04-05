@@ -72,6 +72,9 @@ if(!isset(User::$papercliphp)) {
     	$this->image = $image;
     	$this->avatar_additional = $image->additional();
     	$this->avatar_filename	 = $image->filename();
+    	if(!$image->existsAll()) {
+    		$image->reprocess();
+    	}
     }
     
     public function imageExists() {
@@ -94,7 +97,6 @@ public function uploadFor($user) {
 		$image->createDirectory();
 		
 		move_uploaded_file($image->path());
-		$image->process();
 		$user->setImage($image);
 	}
 }
