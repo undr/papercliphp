@@ -102,6 +102,10 @@ class Papercliphp_Attachment {
 	}
 	
 	public function filename() {
+		return $this->filename . "." . $this->extension;
+	}
+	
+	public function filenameWithoutExtension() {
 		return $this->filename;
 	}
 	
