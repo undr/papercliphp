@@ -81,8 +81,17 @@ class Papercliphp_Attachment {
 		$this->unlinkAll();
 	}
 	
+	public function deleteAllWithoutOriginal() {
+		$this->unlinkAllWithoutOriginal();
+	}
+	
 	public function unlinkAll() {
-		$styles = array_merge(array_keys($this->papercliphp->styles(false)), array($this->papercliphp->config("default_style")));
+		$this->unlinkAllWithoutOriginal();
+		$this->unlink($this->papercliphp->config("default_style"));
+	}
+	
+	public function unlinkAllWithoutOriginal() {
+		$styles = array_keys($this->papercliphp->styles(false));
 		foreach ($styles as $stylename) {
 			$this->unlink($stylename);
 		}
@@ -102,5 +111,10 @@ class Papercliphp_Attachment {
 	
 	public function process() {
 		return $this->papercliphp->process($this);
+	}
+	
+	public function reprocess() {
+		$this->unlinkAllWithoutOriginal();
+		$this->process();
 	}
 }
