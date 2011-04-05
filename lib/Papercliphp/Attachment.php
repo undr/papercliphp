@@ -92,8 +92,8 @@ class Papercliphp_Attachment {
 		return $this->additional;
 	}
 	
-	public function name() {
-		return $this->name;
+	public function filename() {
+		return $this->filename;
 	}
 	
 	public function extension() {
