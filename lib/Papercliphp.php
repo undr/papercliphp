@@ -2,29 +2,32 @@
 if(!defined('ROOT_PAPERCLIPHP')) {
 	define("ROOT_PAPERCLIPHP", dirname(dirname(__FILE__)));
 }
+
+require_once(ROOT_PAPERCLIPHP . "/lib/Paperclip/Attachment.php");
+require_once(ROOT_PAPERCLIPHP . "/lib/Paperclip/Processor.php");
+require_once(ROOT_PAPERCLIPHP . "/lib/Paperclip/Processor/Default.php");
+
 class Papercliphp {
 	
-	protected $name = null;
 	protected $config = array();
-	protected $styles = array("thumbnail" => array());
+	protected $styles = array();
 	protected $processors = null;
 	protected $cachedProcessors = array();
 	
-	public function __construct($name, $config) {
-		$this->name = $name;
+	public function __construct($config=array()) {
 		if(!isset($config['processors'])) {
 			$this->processors = array("Thumbnail" => ROOT_PAPERCLIPHP . "/lib/processors/");
 		} else {
 			$this->processors = $config['processors'];
 			unset($config['processors']);
 		}
-		if(!isset($config['styles'])) {
+		if(isset($config['styles'])) {
 			$this->styles = $config['styles'];
 			unset($config['styles']);
 		}
 		$defaultConfig = array(
-			"path"			=> ":root/images/:directory/:filename/:style.:extension",
-			"url"			=> "/images/:directory/:filename/:style.:extension",
+			"path"			=> ":root/images/:additional/:filename/:style.:extension",
+			"url"			=> "/images/:additional/:filename/:style.:extension",
 			"root"			=> ROOT_PAPERCLIPHP,
 			"default_style" => "original");
 			
@@ -43,8 +46,8 @@ class Papercliphp {
 			$path = $args[0];
 			$name = $args[1];
 			$ext  = explode('.', $name);
-			$ext  = "." . end($ext);
-			$name = str_replace($ext, "", $name);
+			$ext  = end($ext);
+			$name = str_replace("." . $ext, "", $name);
 		} elseif ($argsCount == 3) {
 			$path = $args[0];
 			$name = $args[1];
@@ -66,7 +69,7 @@ class Papercliphp {
 			return new Papercliphp_Processor_Default($this);
 		}
 		if(!isset($this->cachedProcessors[$name])) {
-			require_once($this->processors[$name]);
+			require_once($this->processors[$name] . "$name.php");
 			$this->cachedProcessors[$name] = new $name($this);
 		}
 		return $this->cachedProcessors[$name];
@@ -74,9 +77,8 @@ class Papercliphp {
 	
 	public function process(Papercliphp_Attachment $attachment) {
 		$result = true;
-		foreach ($this->processors as $processor) {
-			$styles = isset($this->styles[strtolower($processor)]) ? $this->styles[strtolower($processor)] : array();
-			$result = $result && $this->createProcessor($processor)->process($attachment, $styles);
+		foreach ($this->processors as $processor => $path) {
+			$result = $result && $this->createProcessor($processor)->process($attachment, $this->styles);
 		}
 		return $result;
 	}
@@ -86,8 +88,8 @@ class Papercliphp {
 	}
 	
 	public function config($name) {
-		if(isset($config[$name])) {
-			return $config[$name];
+		if(isset($this->config[$name])) {
+			return $this->config[$name];
 		}
 		return null;
 	}
@@ -98,5 +100,14 @@ class Papercliphp {
 		} else {
 			return $this->styles;
 		}
+	}
+}
+
+if(!function_exists("rrmdir")) {
+	function rrmdir($path) {
+  		foreach(glob($path.'/*') as $one) 
+  			if(is_file($one)) unlink($one);
+			elseif(is_dir($one) && $one!='.' && $one!='..') remdir($one);
+		return rmdir($path);
 	}
 }

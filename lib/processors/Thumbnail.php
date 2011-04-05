@@ -94,10 +94,10 @@ class Thumbnail extends Papercliphp_Processor {
 	}
 	
 	private function imageType() {
-		if(!isset($this->type)) {
+		if(!isset($this->imageType)) {
 			$this->buildImageInfo();
 		}
-		return $this->type;
+		return $this->imageType;
 	}
 	
 	private function buildImageInfo() {
