@@ -44,7 +44,7 @@
     ?>
 	
 	
-    <?php
+
     if(!isset(User::$papercliphp)) {
         User::$papercliphp = new Papercliphp(array(
    		    "style" => array("tiny" => "20x20!", "small" => "50x50!"),
@@ -52,7 +52,7 @@
     	    "path"  => ":root/images/users/:additional/:filename/:style.:extension",
     	    "url"   => "/images/users/:additional/:style.:extension"));
     }
-    ?>
+    
 
 Добавьте в модель несколько методов для работы с объектом Papercliphp_Attachment и аттрибут $image:
 
@@ -71,9 +71,6 @@
     	$this->image = $image;
     	$this->avatar_additional = $image->additional();
     	$this->avatar_filename	 = $image->filename();
-    	if(!$image->existsAll()) {
-    		$image->reprocess();
-    	}
     }
     
     public function imageExists() {
@@ -81,35 +78,32 @@
     }
     
     public function postDelete($event) {
-    	$this->getImage()->deleteAll();
+    	$invoker = $event->getInvoker();
+    	$invoker->getImage()->deleteAll();
     	// Или, в данном случае, можно:
-    	// $this->getImage()->deleteDirectory();
+    	// $invoker->getImage()->deleteDirectory();
     }
-
+     
     
 В контроллере приложения создайте метод который будет сохранять файл, например так:
 
-    <?php
-    ....
+
     public function uploadFor($user) {
-	    if(isset($_FILES['avatar'])) {
-		    $image = User::$papercliphp->createAttachment("{$user->id}", $_FILES['avatar']['filename']);
-		    $image->createDirectory();
-		
-		    move_uploaded_file($image->path());
+	    if(isset($_FILES['avatar']) && count($_POST['avatar'])) {
+		    $image = User::$papercliphp->createAttachment("{$user->id}", $_FILES['avatar']['name']);
+		    $image->upload($_FILES['avatar']['tmp_name']);
 		    $user->setImage($image);
 	    }
     }
-    ....
-    ?>
+
 
 И сохраняете модель:
 
     $user->save();
 	
-Загруженное изображение с именем my_funny_cat.jpg будет сохраненно в папке PUBLIC_DIR/images/users/123/my_funny_cat под именем original.jpg. Так же будут созданны два изображения tiny.jpg и small.jpg с размерами: 20x20 - один и 50x50 - другой.
+К примеру id пользователя равно 123. Загруженное изображение с именем my_funny_cat.jpg будет сохраненно в папке PUBLIC_DIR/images/users/123/my_funny_cat под именем original.jpg. Так же будут созданны два изображения tiny.jpg и small.jpg с размерами: 20x20 - один и 50x50 - другой.
 
-Можно манипуировать изображением из модели:
+Можно манипуировать изображением имея доступ к модели:
 
     $user->getImage()->url(); 			// => /images/users/123/my_funny_cat/original.jpg
     $user->getImage()->url("small");	// => /images/users/123/my_funny_cat/small.jpg
@@ -145,3 +139,82 @@
     $user->getImage->process();		// Запустить прикрепленные процессоры, в данном случае Thunbnail
     $user->getImage->reprocess();	// Повторно запустить прикрепленные процессоры
 	
+
+Как это использовать в CakePhp
+
+Создаем класс модели User:
+
+	<?php
+	class User extends AppModel {
+		static public $papercliphp = null;
+	    public function beforeSave() {
+	        if (isset($this->data['avatar_file']) && count($this->data['avatar_file'])) {
+	        	if(isset($this->data['avatar_filename')) {
+	        		$this->oldImage = self::$papercliphp->createAttachment("{$this->id}", $this->data['avatar_filename']);
+	        	}
+	        	$this->uploadFile = $this->data['avatar_file']['tmp_name'];
+	        	$this->data['avatar_filename'] = $this->data['avatar_file']['name'];
+	        	unset($this->data['avatar_file']);
+	        }
+	        return true;
+	    }
+	    
+	    public function afterSave($created) {
+	    	if(isset($this->oldImage)) {
+	    		$this->oldImage->deleteDirectory();
+	    		unset($this->oldImage);
+	    	}
+	        if (isset($this->data['avatar_filename')) {
+	        	$image = self::$papercliphp->createAttachment("{$this->id}", $this->data['avatar_filename']);
+	        	if(!$image->upload($this->uploadFile)) {
+	        		return false;
+	        	}
+	        	unset($this->uploadFile);
+	        }
+	        $this->data['User']['ava'] = Security::hash(Configure::read('Security.salt') . $this->data['User']['passwd']);
+	        return true;
+	    }
+	    
+	    public function afterDelete() {
+	    	self::$papercliphp->createAttachment($this->data['avatar_additional'], $this->data['avatar_filename'])->deleteDirectory();
+	    }
+	    
+	    public function afterFind($results) {
+	    	foreach ($results as $key => $val) {
+				if (isset($val['avatar_filename'])) {
+					$results[$key]['avatar'] = self::$papercliphp->createAttachment($val['avatar_additional'], $var['avatar_filename']); 
+				}
+			}
+			return $results;
+	    }
+	}
+	if(!isset(User::$papercliphp)) {
+        User::$papercliphp = new Papercliphp(array(
+   		    "style" => array("tiny" => "20x20!", "small" => "50x50!"),
+    	    "root"  => WWW_ROOT,
+    	    "path"  => ":root/images/users/:additional/:filename/:style.:extension",
+    	    "url"   => "/images/users/:additional/:style.:extension"));
+    }
+	?>
+	
+В контроллере:
+	
+	if( empty($this->data) ) {
+        $this->data = $this->User->read(null, $id);
+    } else {
+    	$this->data['avatar_file'] = $_FILES['avatar_file'];
+        $this->User->set($this->data);
+        if( $this->User->save() ) {
+            $this->Session->setFlash(__('User successfully saved', true));
+        }
+    }
+ 
+В шаблонах примерно так:
+
+	<? foreach ($users as $user):?>
+		<? if($user['avatar']->exists('tiny')): ?>
+			<img src="<?=$user['avatar']->url('tiny')?>" />
+		<? endif; ?>
+	<? endforeach; ?>
+	
+Примерно так, я могу ошибаться в деталях, так как давно не писал на CakePHP.
