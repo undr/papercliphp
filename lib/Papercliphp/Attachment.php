@@ -124,6 +124,22 @@ class Papercliphp_Attachment {
 		return $this->extension;
 	}
 	
+	public function upload($filename) {
+		if (is_uploaded_file($filename)) {
+			$this->createDirectory();
+	        if (move_uploaded_file($filename, $this->path())) {
+	            if(!$this->process()) {
+	              	return false;
+	            }
+	        } else {
+	            return false;
+	        }     
+	    } else {
+	        return false;
+        }
+        return true;
+	}
+	
 	public function process() {
 		return $this->papercliphp->process($this);
 	}
