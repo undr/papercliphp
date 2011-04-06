@@ -1,4 +1,4 @@
-Пример того, как использовать библиотеку с Doctrine:
+## Работа Papercliphp с Doctrine:
 
 Допустим есть модель:
 
@@ -140,7 +140,7 @@
     $user->getImage->reprocess();	// Повторно запустить прикрепленные процессоры
 	
 
-Как это использовать в CakePhp
+## Работа Papercliphp с CakePhp
 
 Создаем класс модели User:
 
@@ -218,3 +218,78 @@
 	<? endforeach; ?>
 	
 Тут описан общий принцип, я могу ошибаться в деталях, так как давно не писал на CakePHP.
+
+## Работа Papercliphp с WolfCMS
+
+Модель выглядит примерно так:
+
+	class Item extends Record {
+		const TABLE_NAME = 'items';
+		private $image = null;
+		static public $papercliphp = null;
+
+		public function getImage() {
+			if(!isset($this->image) && isset($this->image_filename)) {
+				$additional = isset($this->image_additional) ? $this->image_additional : "";
+				$this->image = self::$papercliphp->createAttachment($additional, $this->image_filename);
+			}
+			return $this->image;
+		}
+	
+		public function isImageExists() {
+			return isset($this->image_filename) || isset($this->image);
+		}
+	
+		public function setImage(Papercliphp_Attachment $image) {
+			$this->image = $image;
+			$this->image_additional = $image->additional();
+			$this->image_filename = $image->filename();
+			if(!$image->existsAll()) {
+				$image->reprocess();
+			}
+		}
+	
+		public function afterDelete() { 
+			if($this->isImageExists()) {
+				$this->getImage()->deleteDirectory();
+			}
+			return true; 
+		}
+	}
+	if(!isset(Item::$papercliphp)) {
+		$settings = Plugin::getAllSettings('yagallery');
+		$styles = unserialize($settings['yagallery_styles']);
+		if(!isset($styles['admin_thmb'])) {
+			$styles['admin_thmb'] = "50x50!";
+		}
+	    yagalleriesItem::$papercliphp = new Papercliphp(array(
+   		    "styles" => array("tiny" => "20x20!", "small" => "50x50!"),
+	        "root"  => CMS_ROOT,
+	        "path"  => ":root/images/items/:additional/:filename/:style.:extension",
+	        "url"   => "/images/items/:additional/:filename/:style.:extension"));
+	}
+	
+В контроллере:
+
+	if(isset($_POST['item']) && count($_POST['item']) && isset($_FILES['image_file'])) {
+		$item = new Item($_POST['item']);
+		if($item->save() === true) {
+			$image = Item::$papercliphp->createAttachment($item->id, $_FILES['image_file']['name']);
+			if($image->upload()) {
+				$item->setImage($image);
+				$item->save();
+				Flash::set('success', 'Изображение сохранено');
+				redirect(...);
+			} else {
+				Flash::setNow('error', "Произошла ошибка!");
+			}
+		} else {
+			Flash::setNow('error', "Произошла ошибка!");
+		}	
+	} 
+	
+В шаблонах:
+
+	<? foreach($items as $item):?>
+	<img src="<?= $item->getImage()->url("small") ?>" />
+	<? endforeach ?>
