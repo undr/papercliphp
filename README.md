@@ -89,7 +89,7 @@
 
 
     public function uploadFor($user) {
-	    if(isset($_FILES['avatar']) && count($_POST['avatar'])) {
+	    if(isset($_FILES['avatar'])) {
 		    $image = User::$papercliphp->createAttachment("{$user->id}", $_FILES['avatar']['name']);
 		    $image->upload($_FILES['avatar']['tmp_name']);
 		    $user->setImage($image);
@@ -149,7 +149,7 @@
 		static public $papercliphp = null;
 	    public function beforeSave() {
 	        if (isset($this->data['avatar_file']) && count($this->data['avatar_file'])) {
-	        	if(isset($this->data['avatar_filename')) {
+	        	if(isset($this->data['avatar_filename'])) {
 	        		$this->oldImage = self::$papercliphp->createAttachment("{$this->id}", $this->data['avatar_filename']);
 	        	}
 	        	$this->uploadFile = $this->data['avatar_file']['tmp_name'];
@@ -164,7 +164,7 @@
 	    		$this->oldImage->deleteDirectory();
 	    		unset($this->oldImage);
 	    	}
-	        if (isset($this->data['avatar_filename')) {
+	        if (isset($this->data['avatar_filename'])) {
 	        	$image = self::$papercliphp->createAttachment("{$this->id}", $this->data['avatar_filename']);
 	        	if(!$image->upload($this->uploadFile)) {
 	        		return false;
