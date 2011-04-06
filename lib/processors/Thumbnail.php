@@ -49,7 +49,7 @@ class Thumbnail extends Papercliphp_Processor {
 		$originalSize = $this->originalSize();
 		if($originalSize[0] <= $data['width'] && $originalSize[1] <= $data['height']) { 
 			//Просто копируем
-			copy($this->realPath(), $this->realPath($style));
+			copy($this->attachment->path(), $this->attachment->path($style));
 			return true;
 		}
 	
