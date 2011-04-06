@@ -47,10 +47,10 @@
 
     if(!isset(User::$papercliphp)) {
         User::$papercliphp = new Papercliphp(array(
-   		    "style" => array("tiny" => "20x20!", "small" => "50x50!"),
+   		    "styles" => array("tiny" => "20x20!", "small" => "50x50!"),
     	    "root"  => PUBLIC_DIR,
     	    "path"  => ":root/images/users/:additional/:filename/:style.:extension",
-    	    "url"   => "/images/users/:additional/:style.:extension"));
+    	    "url"   => "/images/users/:additional/:filename/:style.:extension"));
     }
     
 
@@ -190,10 +190,10 @@
 	}
 	if(!isset(User::$papercliphp)) {
         User::$papercliphp = new Papercliphp(array(
-   		    "style" => array("tiny" => "20x20!", "small" => "50x50!"),
+   		    "styles" => array("tiny" => "20x20!", "small" => "50x50!"),
     	    "root"  => WWW_ROOT,
     	    "path"  => ":root/images/users/:additional/:filename/:style.:extension",
-    	    "url"   => "/images/users/:additional/:style.:extension"));
+    	    "url"   => "/images/users/:additional/:filename/:style.:extension"));
     }
 	?>
 	
