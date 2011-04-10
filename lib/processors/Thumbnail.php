@@ -33,7 +33,7 @@ class Thumbnail extends Papercliphp_Processor {
 			$styleData = $this->parseStyle($style);
 			return call_user_func_array(array(&$this, $styleData['type'] . "Resize"), array($styleData, $stylename));
 		} catch (Exception $e) {
-			throw $e;
+			//throw $e;
 			return false;
 		}
 	}
