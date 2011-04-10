@@ -1,8 +1,11 @@
 <?php
 class DoctrinePapercliphp extends Papercliphp {
 	public $name;
-	protected $oldImage = 	null;
-	protected $skip = 		false;
+	
+	/**
+	 * @param string $name
+	 * @param array $config
+	 */
 	public function __construct($name, $config=array()) {
 		$this->name = $name;
 		parent::__construct($config);
@@ -52,20 +55,34 @@ class DoctrinePapercliphp extends Papercliphp {
     	$this->extractAttachmentFrom($invoker)->deleteAll();
 	}
 	
-	public function preUpdate($event) {
-		if($this->skip) { return; }
-		$invoker = $event->getInvoker();
-		$this->oldImage = $this->extractAttachmentFrom($invoker);
-		$this->newImage = $this->createAttachment();
-	}
-	
-	public function postSave($event) {
-		if($this->skip) { return; }
-		$invoker = $event->getInvoker();
-		if(isset($this->oldImage)) {
-			$this->oldImage->deleteAll();
+	/**
+	 * @param Doctrine_Record $record
+	 * @param string $additional
+	 * @param string $file
+	 * @return boolean
+	 */
+	public function saveAttachmentInto(Doctrine_Record $record, $additional, $file) {
+		$attachment = $this->createAttachment($additional, $file['name']);
+		if($this->existsAttachmentIn($record)) {
+			$oldAttachment = $this->extractAttachmentFrom($record);
 		}
-		$this->skip = true;
-		$image ;
+		$this->setAttachmentInto($record, $attachment);
+		$conn = Doctrine_Manager::connection();
+		
+		try {
+			$conn->beginTransaction();
+			if($record->save()) {
+				if(isset($oldAttachment)) {
+					$oldAttachment->deleteAll();
+				}
+				if($attachment->upload($file['tmp_name'] && $attachment->process())) {
+					$conn->commit();
+					return true;
+				}
+			}
+		} catch (Exception $e) { }
+		
+		$conn->rollback();
+		return false;
 	}
 }
