@@ -75,16 +75,15 @@ class DoctrinePapercliphp extends Papercliphp {
 		try {
 			$conn->beginTransaction();
 			if($record->trySave()) {
-				if(isset($oldAttachment)) {
-					$oldAttachment->deleteAll();
-				}
-				print_r($attachment);
-				if($attachment->upload($file['tmp_name']) && $attachment->process()) {
+				if($attachment->upload($file['tmp_name'])) {
+					if(isset($oldAttachment)) {
+						$oldAttachment->deleteAll();
+					}
 					$conn->commit();
 					return true;
 				}
 			}
-		} catch (Exception $e) {}
+		} catch (Exception $e) { }
 		
 		$conn->rollback();
 		return false;

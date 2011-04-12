@@ -98,7 +98,7 @@ class Papercliphp_Attachment {
 	
 	public function unlinkAll() {
 		$this->unlinkAllWithoutOriginal();
-		$this->unlink($this->papercliphp->config("default_style"));
+		$this->unlink();
 	}
 	
 	public function unlinkAllWithoutOriginal() {
