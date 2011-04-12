@@ -1,4 +1,5 @@
 <?php
+require_once(dirname(dirname(__FILE__)) . "/Papercliphp.php");
 class DoctrinePapercliphp extends Papercliphp {
 	public $name;
 	
@@ -29,7 +30,7 @@ class DoctrinePapercliphp extends Papercliphp {
 	 * @param Papercliphp_Attachment $attachment
 	 */
 	public function setAttachmentInto(Doctrine_Record $record, Papercliphp_Attachment $attachment) {
-		$this->{$this->name} = $attachment;
+		$record->{$this->name} = $attachment;
     	$record[$this->name . '_additional'] = $attachment->additional();
     	$record[$this->name . '_filename']	 = $attachment->filename();
 	}
@@ -52,7 +53,9 @@ class DoctrinePapercliphp extends Papercliphp {
 	
 	public function postDelete($event) {
 		$invoker = $event->getInvoker();
-    	$this->extractAttachmentFrom($invoker)->deleteAll();
+		if($this->existsCachedAttachmentIn($invoker) || $this->extractAttachmentFrom($invoker)) {
+    		$this->extractAttachmentFrom($invoker)->deleteAll();
+		}
 	}
 	
 	/**
@@ -71,16 +74,17 @@ class DoctrinePapercliphp extends Papercliphp {
 		
 		try {
 			$conn->beginTransaction();
-			if($record->save()) {
+			if($record->trySave()) {
 				if(isset($oldAttachment)) {
 					$oldAttachment->deleteAll();
 				}
-				if($attachment->upload($file['tmp_name'] && $attachment->process())) {
+				print_r($attachment);
+				if($attachment->upload($file['tmp_name']) && $attachment->process()) {
 					$conn->commit();
 					return true;
 				}
 			}
-		} catch (Exception $e) { }
+		} catch (Exception $e) {}
 		
 		$conn->rollback();
 		return false;

@@ -30,6 +30,7 @@ class Thumbnail extends Papercliphp_Processor {
 	
 	protected function processStyle($stylename, $style) {
 		try {
+			$this->attachment->createDirectory($stylename);
 			$styleData = $this->parseStyle($style);
 			return call_user_func_array(array(&$this, $styleData['type'] . "Resize"), array($styleData, $stylename));
 		} catch (Exception $e) {
