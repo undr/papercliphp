@@ -56,7 +56,7 @@ class DoctrinePapercliphp extends Papercliphp {
 		if($this->existsCachedAttachmentIn($invoker) || $this->extractAttachmentFrom($invoker)) {
 			$attachment = $this->extractAttachmentFrom($invoker);
 			if(isset($attachment)) {
-    			$this->extractAttachmentFrom($invoker)->deleteAll();
+    			$attachment->deleteAll();
 			}
 		}
 	}
