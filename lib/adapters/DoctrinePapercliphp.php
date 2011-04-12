@@ -54,7 +54,10 @@ class DoctrinePapercliphp extends Papercliphp {
 	public function postDelete($event) {
 		$invoker = $event->getInvoker();
 		if($this->existsCachedAttachmentIn($invoker) || $this->extractAttachmentFrom($invoker)) {
-    		$this->extractAttachmentFrom($invoker)->deleteAll();
+			$attachment = $this->extractAttachmentFrom($invoker);
+			if(isset($attachment)) {
+    			$this->extractAttachmentFrom($invoker)->deleteAll();
+			}
 		}
 	}
 	
@@ -64,8 +67,8 @@ class DoctrinePapercliphp extends Papercliphp {
 	 * @param string $file
 	 * @return boolean
 	 */
-	public function saveAttachmentInto(Doctrine_Record $record, $additional, $file) {
-		$attachment = $this->createAttachment($additional, $file['name']);
+	public function saveAttachmentInto(Doctrine_Record $record, $additional, $filename, $file) {
+		$attachment = $this->createAttachment($additional, $filename);
 		if($this->existsAttachmentIn($record)) {
 			$oldAttachment = $this->extractAttachmentFrom($record);
 		}
@@ -75,7 +78,7 @@ class DoctrinePapercliphp extends Papercliphp {
 		try {
 			$conn->beginTransaction();
 			if($record->trySave()) {
-				if($attachment->upload($file['tmp_name'])) {
+				if($attachment->upload($file)) {
 					if(isset($oldAttachment)) {
 						$oldAttachment->deleteAll();
 					}

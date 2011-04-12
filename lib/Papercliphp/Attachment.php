@@ -19,7 +19,7 @@ class Papercliphp_Attachment {
 	
 	public function url($stylename="") {
 		if(!empty($stylename) && !$this->papercliphp->styleExists($stylename)) {
-			throw new Exception("Нет такого стиля для изображения");
+			throw new Exception("Нет такого стиля для изображения '$stylename', только: " . implode(", ", $this->papercliphp->styles(false)));
 		} elseif(empty($stylename)) {
 			$stylename = $this->papercliphp->config("default_style");
 		}
@@ -33,7 +33,7 @@ class Papercliphp_Attachment {
 	
 	public function path($stylename="") {
 		if(!empty($stylename) && !$this->papercliphp->styleExists($stylename)) {
-			throw new Exception("Нет такого стиля для изображения");
+			throw new Exception("Нет такого стиля для изображения '$stylename', только: " . implode(", ", $this->papercliphp->styles(false)));
 		} elseif(empty($stylename)) {
 			$stylename = $this->papercliphp->config("default_style");
 		}
